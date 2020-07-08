@@ -1,4 +1,4 @@
-$debug = $true
+$debug = $false
 $log = $true
 $global:fullversion = "5.1.28642" 
 $doinstallflag = $true

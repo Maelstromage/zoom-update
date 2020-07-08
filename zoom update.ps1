@@ -6,9 +6,6 @@ $outlookpluginflag = $false
 $global:zoominstalls = Get-WmiObject -Class Win32_Product | where {$_.name -like "*zoom*"}
 $sleeptime = 10
 
-if($log = $true){Add-Content -Value "`r`n $(get-date) `r`n" -Path "$PSScriptRoot\log.txt"}
-
-
 function write-debug{
     param($message)
     if ($debug -eq $true){
@@ -101,7 +98,7 @@ function check-fulluptodate{
 }
 
 
-
+if($log = $true){Add-Content -Value "`r`n $(get-date) `r`n" -Path "$PSScriptRoot\log.txt"}
 
 if(check-inmeeting){
     $doinstallflag = $false
@@ -112,6 +109,7 @@ if((check-fulluptodate) -and (!(check-appdatainstall))){
     $doinstallflag = $false
     write-debug -message "Zoom is up to date and no appdata versions found. Install aborted"
 }
+
 
 
 write-debug -message "Zoom in meeting: $(check-inmeeting)"
@@ -125,13 +123,13 @@ write-debug -message "Zoom uptodate: $(check-fulluptodate)"
 
 if($doinstallflag -eq $true){
     write-debug -message "Running Clean Zoom"
-    start -wait C:\ZoomTest\CleanZoom.exe
+    start -wait $PSScriptRoot\CleanZoom.exe
     write-debug -message "Installing Full version of Zoom"
-    msiexec /i c:\zoomtest\ZoomInstallerFull.msi /quiet /norestart MSIRESTARTMANAGERCONTROL="Disable" ZoomAutoUpdate="False" ZNoDesktopShortCut="true" ZConfig="nogoogle=1;nofacebook=1" /log install.log 
+    msiexec /i $PSScriptRoot\ZoomInstallerFull.msi /quiet /norestart MSIRESTARTMANAGERCONTROL="Disable" ZoomAutoUpdate="False" ZNoDesktopShortCut="true" ZConfig="nogoogle=1;nofacebook=1" /log install.log 
     if(check-outlookplugin){
         write-debug -message "Installing outlook plugin"
         sleep $sleeptime
-        msiexec /i C:\zoomtest\ZoomOutlookPluginSetup.msi /quiet /norestart
+        msiexec /i $PSScriptRoot\ZoomOutlookPluginSetup.msi /quiet /norestart
     }
 }
 
@@ -147,24 +145,3 @@ write-debug -message "Zoom appdata installed: $(check-appdatainstall) $(check-ap
 write-debug -message "Zoom outlook plugin installed: $(check-outlookplugin) $(check-outlookpluginversion)"
 write-debug -message "Zoom up to date: $(check-fulluptodate)"
     
-
-
-<#
-Zoom.msi - We want installed
-Zoom.exe - We want removed
-Zoom Outlook - We want to keep
-To get rid of zoom.exe you must run Cleanzoom.exe
-Cleanzoom.exe will end a in progress meeting. (BAD)
-Cleanzoom.exe will get rid of Zoom Outlook. (BAD)
-Cleanzoom if zoom.exe is installed and no one is in a meeting
-Cleanzoom if zoom.msi is out of date and no one is in a meeting
-Cleanzoom if zoom.msi is not installed and no one is in a meeting
-if Cleanzoom has been run then zoom.msi is installed
-if outlook plugin was installed it will reinstall it since outlook plugin is removed by cleanzoom
-install zoom = true
-Zoom is in a meeting install = false
-Zoom is up to date and appdata is not installed = false
-cleanzoom
-install msi
-if outlook plugin was installed, install outlook plugin
-#>
